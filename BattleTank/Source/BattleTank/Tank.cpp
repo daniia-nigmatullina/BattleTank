@@ -2,33 +2,30 @@
 
 #include "Tank.h"
 #include "TankBarrel.h"
-#include "TankTurret.h"
 #include "Projectile.h"
 
 #include "GameFramework/Pawn.h"
-#include "TankAimingComponent.h"
-#include "TankMovementComponent.h"
-#include "Engine/World.h"
 #include "Components/StaticMeshComponent.h"
 
 
 void ATank::Fire()
 {
-	if (!ensure(TankAimingComponent)) { return; }
+	if (!ensure(Barrel)) { return; }
 
 	bool bReloaded = (FPlatformTime::Seconds() - LastFireTime) > ReloadTimeInSeconds;
 
-	if (TankAimingComponent->GetBarrel() && bReloaded)
+	if (Barrel && bReloaded)
 	{
 		auto SpawnedProjectile = GetWorld()->SpawnActor<AProjectile>(
 			ProjectileBlueprint,
-			TankAimingComponent->GetBarrel()->GetSocketLocation(FName("ProjectileSocket")),
-			TankAimingComponent->GetBarrel()->GetSocketRotation(FName("ProjectileSocket"))
+			Barrel->GetSocketLocation(FName("ProjectileSocket")),
+			Barrel->GetSocketRotation(FName("ProjectileSocket"))
 			);
 		SpawnedProjectile->Launch(LaunchSpeed);
 		LastFireTime = FPlatformTime::Seconds();
 	}
 }
+
 
 // Sets default values
 ATank::ATank()
@@ -38,10 +35,6 @@ ATank::ATank()
 
 }
 
-void ATank::AimAt(FVector HitLocation)
-{
-	if (!ensure(TankAimingComponent)) { return; }
-	TankAimingComponent->AimAt(HitLocation, LaunchSpeed);
-}
+
 
 
