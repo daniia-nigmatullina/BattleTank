@@ -2,7 +2,6 @@
 
 #include "TankPlayerController.h"
 #include "TankAimingComponent.h"
-#include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 
 void ATankPlayerController::BeginPlay()
