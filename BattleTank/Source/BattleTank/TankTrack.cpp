@@ -2,18 +2,44 @@
 
 #include "TankTrack.h"
 
-void UTankTrack::SetThrottle(float Throttle)
+void UTankTrack::DriveTank()
 {
-
-	//auto Name = GetName();
-	auto ForceApplied = GetForwardVector() * Throttle * MaxTrackDrivingForce;
-	//auto AlterAngle = FRotator(TrackForcePitch, 0, 0);
-	//if (Throttle < 0) {
-	//	AlterAngle.Pitch = -TrackForcePitch;
-	//}
-	//ForceApplied = AlterAngle.RotateVector(ForceApplied);
-
+	auto ForceApplied = GetForwardVector() * CurrentThrottle * MaxTrackDrivingForce;
 	auto ForceLocation = GetComponentLocation();
 	auto TankRoot = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
 	TankRoot->AddForceAtLocation(ForceApplied, ForceLocation);
+}
+
+void UTankTrack::SetThrottle(float Throttle)
+{
+	CurrentThrottle = FMath::Clamp<float>(CurrentThrottle + Throttle, -1, 1);
+}
+
+UTankTrack::UTankTrack()
+{
+	PrimaryComponentTick.bCanEverTick = false;
+}
+
+void UTankTrack::BeginPlay()
+{
+	Super::BeginPlay();
+	OnComponentHit.AddDynamic(this, &UTankTrack::OnHit);
+}
+
+void UTankTrack::ApplySidewaysForce()
+{
+	auto SlippageSpeed = FVector::DotProduct(GetRightVector(), GetComponentVelocity());
+	auto DeltaTime = GetWorld()->GetDeltaSeconds();
+	auto CorrectionAcceleration = -SlippageSpeed / DeltaTime * GetRightVector();
+	auto TankRoot = Cast<UStaticMeshComponent>(GetOwner()->GetRootComponent());
+	auto CorrectionForce = (TankRoot->GetMass() * CorrectionAcceleration) / 2; //Two tracks
+	TankRoot->AddForce(CorrectionForce);
+}
+
+void UTankTrack::OnHit(UPrimitiveComponent * HitComponent, AActor * OtherActor, UPrimitiveComponent * OtherComp, FVector NormalImpulse, const FHitResult & Hit)
+{
+	// Calls every frame tank on the ground
+	DriveTank();
+	ApplySidewaysForce();
+	CurrentThrottle = 0;
 }
