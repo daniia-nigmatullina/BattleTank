@@ -119,7 +119,7 @@ EFiringStatus UTankAimingComponent::GetFiringStatus() const
 	return FiringStatus;
 }
 
-int UTankAimingComponent::GetAmmoLeft() const
+int32 UTankAimingComponent::GetAmmoLeft() const
 {
 	return AmmoLeft;
 }
