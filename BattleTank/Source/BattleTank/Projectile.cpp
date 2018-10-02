@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Gameframework/ProjectileMovementComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AProjectile::AProjectile()
 {
@@ -38,7 +39,7 @@ void AProjectile::BeginPlay()
 
 void AProjectile::Launch(float Speed)
 {
-	ExplosionForce->ImpulseStrength = 50000000;
+	ExplosionForce->ImpulseStrength = 50000000; // TODO remove magic number
 	ExplosionForce->FireImpulse();
 	ProjectileMovementComponent->SetVelocityInLocalSpace(FVector::ForwardVector * Speed);
 	ProjectileMovementComponent->Activate();
@@ -48,11 +49,22 @@ void AProjectile::OnHit(UPrimitiveComponent * HitComponent, AActor * OtherActor,
 {
 	LaunchBlast->Deactivate();
 	ImpactBlast->Activate();
-	ExplosionForce->ImpulseStrength = 100000000;
+
+	ExplosionForce->ImpulseStrength = 100000000;  // TODO remove magic number
 	ExplosionForce->FireImpulse();
+
 	SetRootComponent(ImpactBlast);
 	CollisionMesh->DestroyComponent();
 
+	UGameplayStatics::ApplyRadialDamage(
+		this,
+		ProjectileDamage,
+		GetActorLocation(),
+		ExplosionForce->Radius,
+		UDamageType::StaticClass(),
+		TArray<AActor*>()
+	);
+	
 	FTimerHandle Timer;
 	GetWorld()->GetTimerManager().SetTimer(Timer, this, &AProjectile::OnTimerExpired, DestroyDelay, false);
 }
